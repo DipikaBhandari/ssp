@@ -35,7 +35,6 @@ artifacts/
 packages/
 
 # Azure Functions local settings and secrets
-local.settings.json
 secrets.json
 secrets/
 secrets.settings
