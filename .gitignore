@@ -1,0 +1,77 @@
+# .gitignore for a C# / .NET / Azure Functions project
+# Keeps build artifacts, user secrets, emulator data, and OS files out of git
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio / IDE
+.vs/
+.vscode/
+.idea/
+*.iml
+
+# Build outputs
+bin/
+obj/
+Debug/
+Release/
+publish/
+artifacts/
+
+# Rider
+*.DotSettings
+
+# Dotnet / NuGet
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Azure Functions local settings and secrets
+local.settings.json
+secrets.json
+secrets/
+secrets.settings
+
+# Azurite / storage emulator files
+__blobstorage__/
+__queuestorage__/
+__table__/
+azurite/
+__azurite_db_*.json
+
+# Test results and logs
+TestResults/
+test-results/
+*.trx
+*.log
+*.tlog
+*.coverage
+coverage/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+
+# Node/npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+*.pdb
+*.cache
+*.pid
+*.seed

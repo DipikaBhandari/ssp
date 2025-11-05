@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "WeatherImageApp": {
+      "commandName": "Project",
+      "commandLineArgs": "start --port 7071",
+      "launchBrowser": false
+    }
+  }
+}
