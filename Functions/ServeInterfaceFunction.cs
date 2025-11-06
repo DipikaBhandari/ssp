@@ -23,12 +23,20 @@ namespace WeatherImageApp.Functions
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/html; charset=utf-8");
 
-            // Try multiple possible paths
+            // Try multiple possible paths. In Azure app service the working directory is typically
+            // C:\home\site\wwwroot so the file may be directly under that directory.
             var possiblePaths = new[]
             {
+                // direct file in current working directory (e.g. C:\home\site\wwwroot\test-interface.html)
+                Path.Combine(Directory.GetCurrentDirectory(), "test-interface.html"),
+                // sometimes published into a wwwroot folder under the base directory
                 Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "test-interface.html"),
+                Path.Combine(AppContext.BaseDirectory, "test-interface.html"),
                 Path.Combine(AppContext.BaseDirectory, "wwwroot", "test-interface.html"),
+                // relative path
+                Path.Combine(Environment.CurrentDirectory, "test-interface.html"),
                 Path.Combine(Environment.CurrentDirectory, "wwwroot", "test-interface.html"),
+                // fallback
                 "wwwroot/test-interface.html"
             };
 

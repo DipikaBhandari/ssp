@@ -25,8 +25,12 @@ namespace WeatherImageApp.Functions
 
             var possiblePaths = new[]
             {
+                Path.Combine(Directory.GetCurrentDirectory(), "history.html"),
                 Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "history.html"),
+                Path.Combine(AppContext.BaseDirectory, "history.html"),
                 Path.Combine(AppContext.BaseDirectory, "wwwroot", "history.html"),
+                Path.Combine(Environment.CurrentDirectory, "history.html"),
+                Path.Combine(Environment.CurrentDirectory, "wwwroot", "history.html"),
                 "wwwroot/history.html"
             };
 
