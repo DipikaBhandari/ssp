@@ -11,20 +11,17 @@ public class ProcessImageFunction
     private readonly ILogger<ProcessImageFunction> _logger;
     private readonly IImageService _imageService;
     private readonly IBlobStorageService _blobStorageService;
-    private readonly IJobStatusService _jobStatusService;
     private readonly ITableStorageService _tableStorageService;
 
     public ProcessImageFunction(
         ILogger<ProcessImageFunction> logger,
         IImageService imageService,
         IBlobStorageService blobStorageService,
-        IJobStatusService jobStatusService,
         ITableStorageService tableStorageService)
     {
         _logger = logger;
         _imageService = imageService;
         _blobStorageService = blobStorageService;
-        _jobStatusService = jobStatusService;
         _tableStorageService = tableStorageService;
     }
 
@@ -57,9 +54,6 @@ public class ProcessImageFunction
                 message.JobId, 
                 message.StationIndex, 
                 processedImage);
-            
-            // Update job status with new image URL
-            await _jobStatusService.UpdateJobProgressAsync(message.JobId, imageUrl);
             
             // Update progress in Table Storage
             var currentStatus = await _tableStorageService.GetJobStatusAsync(message.JobId);

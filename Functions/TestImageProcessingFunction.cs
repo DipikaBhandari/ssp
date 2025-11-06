@@ -15,7 +15,6 @@ public class TestImageProcessingFunction
     private readonly IWeatherService _weatherService;
     private readonly IImageService _imageService;
     private readonly IBlobStorageService _blobStorageService;
-    private readonly IJobStatusService _jobStatusService;
     private readonly IConfiguration _configuration;
 
     public TestImageProcessingFunction(
@@ -23,14 +22,12 @@ public class TestImageProcessingFunction
         IWeatherService weatherService,
         IImageService imageService,
         IBlobStorageService blobStorageService,
-        IJobStatusService jobStatusService,
         IConfiguration configuration)
     {
         _logger = logger;
         _weatherService = weatherService;
         _imageService = imageService;
         _blobStorageService = blobStorageService;
-        _jobStatusService = jobStatusService;
         _configuration = configuration;
     }
 

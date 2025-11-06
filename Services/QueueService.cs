@@ -8,32 +8,59 @@ namespace WeatherImageApp.Services;
 
 public class QueueService : IQueueService
 {
+    private readonly QueueClient _jobRequestQueueClient;
     private readonly QueueClient _imageQueueClient;
     private readonly ILogger<QueueService> _logger;
-    private readonly IJobStatusService _jobStatusService;
 
     public QueueService(
         IConfiguration configuration, 
-        ILogger<QueueService> logger,
-        IJobStatusService jobStatusService)
+        ILogger<QueueService> logger)
     {
         _logger = logger;
-        _jobStatusService = jobStatusService;
         var connectionString = configuration["StorageConnectionString"] 
                               ?? configuration["AzureWebJobsStorage"]
                               ?? throw new InvalidOperationException("Storage connection string not found");
 
+        // Queue 1: For starting jobs
+        _jobRequestQueueClient = new QueueClient(connectionString, "job-request-queue");
+        
+        // Queue 2: For fetching and updating images
         _imageQueueClient = new QueueClient(connectionString, "image-processing-queue");
     }
 
-    public async Task EnqueueJobAsync(string jobId, List<WeatherStation> stations)
+    public async Task EnqueueJobRequestAsync(string jobId, int maxStations = 36)
+    {
+        try
+        {
+            await _jobRequestQueueClient.CreateIfNotExistsAsync();
+            
+            var message = new JobRequestMessage
+            {
+                JobId = jobId,
+                RequestedAt = DateTime.UtcNow,
+                MaxStations = maxStations
+            };
+
+            var messageJson = JsonSerializer.Serialize(message);
+            var messageBytes = System.Text.Encoding.UTF8.GetBytes(messageJson);
+            var messageBase64 = Convert.ToBase64String(messageBytes);
+            
+            await _jobRequestQueueClient.SendMessageAsync(messageBase64);
+            
+            _logger.LogInformation($"[JobId {jobId}] Enqueued job request to job-request-queue");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error enqueuing job request {jobId}");
+            throw;
+        }
+    }
+
+    public async Task EnqueueImageProcessingJobsAsync(string jobId, List<WeatherStation> stations)
     {
         try
         {
             await _imageQueueClient.CreateIfNotExistsAsync();
-            
-            // Create job status
-            await _jobStatusService.CreateJobAsync(jobId, stations.Count);
 
             // Enqueue a message for each station (fan-out pattern)
             for (int i = 0; i < stations.Count; i++)
@@ -53,17 +80,18 @@ public class QueueService : IQueueService
                 await _imageQueueClient.SendMessageAsync(messageBase64);
             }
 
-            _logger.LogInformation($"[JobId {jobId}] Enqueued {stations.Count} image processing messages");
+            _logger.LogInformation($"[JobId {jobId}] Enqueued {stations.Count} image processing messages to image-processing-queue");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error enqueuing job {jobId}");
+            _logger.LogError(ex, $"Error enqueuing image processing jobs {jobId}");
             throw;
         }
     }
 
-    public Task<JobStatus?> GetJobStatusAsync(string jobId)
+    [Obsolete("Use EnqueueImageProcessingJobsAsync instead")]
+    public Task EnqueueJobAsync(string jobId, List<WeatherStation> stations)
     {
-        return _jobStatusService.GetJobStatusAsync(jobId);
+        return EnqueueImageProcessingJobsAsync(jobId, stations);
     }
 }

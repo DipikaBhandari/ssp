@@ -1,0 +1,32 @@
+### Weather Image App - API Documentation
+### Base URL: http://localhost:7071 (local) or https://your-function-app.azurewebsites.net (Azure)
+### Authentication: X-API-Key header required for all endpoints
+
+### 1. Test Image Processing (Single Station)
+### Generates a weather image for one random weather station
+GET {{baseUrl}}/api/test/image
+X-API-Key: dev-weather-app-key-12345
+Content-Type: application/json
+
+###
+
+### 2. Start Job (All 36 Stations)
+### Initiates image processing for all weather stations
+POST {{baseUrl}}/api/job/start
+X-API-Key: dev-weather-app-key-12345
+Content-Type: application/json
+
+###
+
+### 3. Get Job Status
+### Retrieves the status and results of a job
+GET {{baseUrl}}/api/job/{{jobId}}
+X-API-Key: dev-weather-app-key-12345
+Content-Type: application/json
+
+###
+
+### Example Variables
+@baseUrl = http://localhost:7071
+@jobId = your-job-id-here
+@apiKey = dev-weather-app-key-12345

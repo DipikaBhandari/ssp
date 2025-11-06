@@ -12,7 +12,6 @@ var host = new HostBuilder()
         
         // Register services
         services.AddHttpClient();
-        services.AddSingleton<IJobStatusService, JobStatusService>();
         services.AddSingleton<IWeatherService, WeatherService>();
         services.AddSingleton<IImageService, ImageService>();
         services.AddSingleton<IBlobStorageService, BlobStorageService>();

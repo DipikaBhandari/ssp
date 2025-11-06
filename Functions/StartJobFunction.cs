@@ -13,23 +13,17 @@ namespace WeatherImageApp.Functions;
 public class StartJobFunction
 {
     private readonly ILogger<StartJobFunction> _logger;
-    private readonly IWeatherService _weatherService;
     private readonly IQueueService _queueService;
     private readonly IConfiguration _configuration;
-    private readonly ITableStorageService _tableStorageService;
 
     public StartJobFunction(
         ILogger<StartJobFunction> logger,
-        IWeatherService weatherService,
         IQueueService queueService,
-        IConfiguration configuration,
-        ITableStorageService tableStorageService)
+        IConfiguration configuration)
     {
         _logger = logger;
-        _weatherService = weatherService;
         _queueService = queueService;
         _configuration = configuration;
-        _tableStorageService = tableStorageService;
     }
 
     [Function("StartJob")]
@@ -43,42 +37,22 @@ public class StartJobFunction
             return authResponse;
         }
 
-        _logger.LogInformation("Starting new weather image generation job");
+        _logger.LogInformation("Received request to start new weather image generation job");
 
         try
         {
             // Generate unique job ID
             var jobId = Guid.NewGuid().ToString();
             
-            // Fetch weather stations
-            _logger.LogInformation("Fetching weather station data...");
-            var stations = await _weatherService.GetWeatherStationsAsync(36);
+            _logger.LogInformation($"[JobId {jobId}] Enqueueing job request to job-request-queue");
             
-            if (stations.Count == 0)
-            {
-                _logger.LogWarning("No weather stations retrieved");
-                var errorResponse = req.CreateResponse(HttpStatusCode.ServiceUnavailable);
-                await errorResponse.WriteAsJsonAsync(new { error = "Unable to fetch weather data" });
-                return errorResponse;
-            }
+            // Enqueue job request to job-request-queue
+            // The StartJobQueueFunction will handle fetching stations and processing
+            await _queueService.EnqueueJobRequestAsync(jobId, maxStations: 36);
+            
+            _logger.LogInformation($"[JobId {jobId}] Job request enqueued successfully");
 
-            // Enqueue processing jobs
-            await _queueService.EnqueueJobAsync(jobId, stations);
-            
-            // Save initial job status to Table Storage
-            var jobStatus = new JobStatus
-            {
-                JobId = jobId,
-                Status = "processing",
-                StartTime = DateTime.UtcNow,
-                TotalStations = stations.Count,
-                ProcessedStations = 0
-            };
-            await _tableStorageService.SaveJobStatusAsync(jobStatus);
-            
-            _logger.LogInformation($"Job {jobId} started with {stations.Count} stations");
-
-            // Return job ID
+            // Return job ID immediately (async pattern)
             var response = req.CreateResponse(HttpStatusCode.Accepted);
             await response.WriteAsJsonAsync(new JobRequest
             {

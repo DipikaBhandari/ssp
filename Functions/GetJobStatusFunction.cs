@@ -11,20 +11,17 @@ namespace WeatherImageApp.Functions;
 public class GetJobStatusFunction
 {
     private readonly ILogger<GetJobStatusFunction> _logger;
-    private readonly IQueueService _queueService;
     private readonly IBlobStorageService _blobStorageService;
     private readonly IConfiguration _configuration;
     private readonly ITableStorageService _tableStorageService;
 
     public GetJobStatusFunction(
         ILogger<GetJobStatusFunction> logger,
-        IQueueService queueService,
         IBlobStorageService blobStorageService,
         IConfiguration configuration,
         ITableStorageService tableStorageService)
     {
         _logger = logger;
-        _queueService = queueService;
         _blobStorageService = blobStorageService;
         _configuration = configuration;
         _tableStorageService = tableStorageService;
@@ -46,14 +43,8 @@ public class GetJobStatusFunction
 
         try
         {
-            // Try to get from Table Storage first (persistent storage)
+            // Get job status from Table Storage
             var jobStatus = await _tableStorageService.GetJobStatusAsync(jobId);
-            
-            // Fall back to queue-based status if not in table storage
-            if (jobStatus == null)
-            {
-                jobStatus = await _queueService.GetJobStatusAsync(jobId);
-            }
             
             if (jobStatus == null)
             {
