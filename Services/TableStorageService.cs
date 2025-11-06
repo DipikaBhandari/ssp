@@ -138,6 +138,42 @@ public class TableStorageService : ITableStorageService
             // Don't throw - this is not critical
         }
     }
+
+    public async Task<List<JobStatus>> GetAllJobsAsync()
+    {
+        try
+        {
+            var jobs = new List<JobStatus>();
+            
+            await foreach (var entity in _tableClient.QueryAsync<JobStatusEntity>(filter: $"PartitionKey eq '{PartitionKey}'"))
+            {
+                var jobStatus = new JobStatus
+                {
+                    JobId = entity.RowKey,
+                    Status = entity.Status,
+                    ProcessedStations = entity.ProcessedStations,
+                    TotalStations = entity.TotalStations,
+                    StartTime = entity.StartTime,
+                    CompletedTime = entity.CompletedTime
+                };
+
+                if (!string.IsNullOrEmpty(entity.ImagesJson))
+                {
+                    jobStatus.Images = System.Text.Json.JsonSerializer.Deserialize<List<WeatherImageInfo>>(entity.ImagesJson);
+                }
+
+                jobs.Add(jobStatus);
+            }
+
+            _logger.LogInformation($"Retrieved {jobs.Count} jobs from Table Storage");
+            return jobs;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all jobs from Table Storage");
+            throw;
+        }
+    }
 }
 
 // Table entity class for Azure Table Storage

@@ -8,4 +8,5 @@ public interface ITableStorageService
     Task<JobStatus?> GetJobStatusAsync(string jobId);
     Task UpdateJobProgressAsync(string jobId, int processedStations, int totalStations);
     Task CompleteJobAsync(string jobId);
+    Task<List<JobStatus>> GetAllJobsAsync();
 }
