@@ -23,17 +23,46 @@ namespace WeatherImageApp.Functions
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/html; charset=utf-8");
 
-            var htmlPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "test-interface.html");
-            
-            if (File.Exists(htmlPath))
+            // Try multiple possible paths
+            var possiblePaths = new[]
             {
-                var html = File.ReadAllText(htmlPath);
-                response.WriteString(html);
+                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "test-interface.html"),
+                Path.Combine(AppContext.BaseDirectory, "wwwroot", "test-interface.html"),
+                Path.Combine(Environment.CurrentDirectory, "wwwroot", "test-interface.html"),
+                "wwwroot/test-interface.html"
+            };
+
+            string? htmlContent = null;
+            string? foundPath = null;
+
+            foreach (var path in possiblePaths)
+            {
+                if (File.Exists(path))
+                {
+                    htmlContent = File.ReadAllText(path);
+                    foundPath = path;
+                    _logger.LogInformation($"Found HTML file at: {path}");
+                    break;
+                }
+            }
+
+            if (htmlContent != null)
+            {
+                response.WriteString(htmlContent);
             }
             else
             {
                 response.StatusCode = HttpStatusCode.NotFound;
-                response.WriteString("<h1>Test interface file not found</h1>");
+                var errorHtml = $@"
+                    <h1>Test interface file not found</h1>
+                    <p>Searched paths:</p>
+                    <ul>
+                        {string.Join("", possiblePaths.Select(p => $"<li>{p} - Exists: {File.Exists(p)}</li>"))}
+                    </ul>
+                    <p>Current Directory: {Directory.GetCurrentDirectory()}</p>
+                    <p>Base Directory: {AppContext.BaseDirectory}</p>
+                ";
+                response.WriteString(errorHtml);
             }
 
             return response;
