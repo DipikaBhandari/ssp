@@ -2,7 +2,11 @@ param location string = resourceGroup().location
 
 @description('API Key for authentication')
 @secure()
-param apiKey string = 'dev-weather-app-key-12345'
+param apiKey string
+
+@description('Unsplash API Access Key')
+@secure()
+param unsplashAccessKey string = ''
 
 var prefix = uniqueString('ccd2024', location, resourceGroup().name, subscription().subscriptionId) 
 var serverFarmName = '${prefix}sf'
@@ -49,13 +53,19 @@ resource queueService 'Microsoft.Storage/storageAccounts/queueServices@2023-01-0
   name: 'default'
 }
 
-// Image Processing Queue
+// Job Request Queue (Queue 1: for starting jobs)
+resource jobRequestQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-01-01' = {
+  parent: queueService
+  name: 'job-request-queue'
+}
+
+// Image Processing Queue (Queue 2: for fetching and updating images)
 resource imageProcessingQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-01-01' = {
   parent: queueService
   name: 'image-processing-queue'
 }
 
-// Status Update Queue
+// Status Update Queue (legacy, kept for backward compatibility)
 resource statusUpdateQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-01-01' = {
   parent: queueService
   name: 'status-update-queue'
@@ -123,7 +133,7 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
       // Application-specific settings
       StorageConnectionString: storageAccountConnectionString
       BlobContainerName: 'weather-images'
-      UnsplashAccessKey: ''
+      UnsplashAccessKey: unsplashAccessKey
       ApiKey: apiKey
     }
   }
